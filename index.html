@@ -1,0 +1,255 @@
+<h2 class="sr-only">이준이 생일파티 초대장 — 클릭하면 폭죽과 함께 파티 일정이 펼쳐집니다</h2>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
+
+  .envelope-wrap {
+    display: flex; justify-content: center; align-items: center;
+    padding: 2rem 1rem; min-height: 420px;
+  }
+  .envelope {
+    width: 340px; background: #fff9f0; border-radius: 20px;
+    border: 2.5px solid #f7c948; padding: 2rem 1.5rem;
+    text-align: center; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease; position: relative;
+  }
+  .envelope:hover { transform: scale(1.03); box-shadow: 0 8px 32px #f7c94840; }
+  .balloons { display: flex; justify-content: center; gap: 10px; margin-bottom: 1rem; font-size: 2.4rem; animation: bounce 1.8s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+  .env-title { font-size: 1.35rem; font-weight: 700; color: #e07b00; line-height: 1.5; margin-bottom: 0.5rem; }
+  .env-sub { font-size: 0.88rem; color: #bfa060; margin-bottom: 1.2rem; }
+  .tap-btn { display: inline-block; background: #f7c948; color: #7a4a00; font-size: 0.9rem; font-weight: 700; padding: 0.5rem 1.4rem; border-radius: 50px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #f7c94860; } 50% { box-shadow: 0 0 0 8px #f7c94800; } }
+  .confetti-row { font-size: 1.2rem; margin-top: 0.9rem; letter-spacing: 4px; }
+
+  /* CANVAS */
+  #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; display: none; }
+
+  /* MUSIC BTN */
+  .music-bar {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: #fff3cd; border: 1.5px solid #f7c948; border-radius: 50px;
+    padding: 7px 18px; margin: 0 auto 1rem; width: fit-content;
+    font-size: 0.85rem; color: #7a4a00; font-weight: 600; cursor: pointer;
+  }
+  .music-bar:hover { background: #fde68a; }
+  .note-anim { font-size: 1.1rem; animation: noteBounce 0.6s infinite alternate; }
+  @keyframes noteBounce { from { transform: rotate(-10deg) scale(1); } to { transform: rotate(10deg) scale(1.2); } }
+
+  /* CARD */
+  .card-wrap { display: none; padding: 1.5rem 1rem 2rem; animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .card { max-width: 420px; margin: 0 auto; background: #fff9f0; border: 2.5px solid #f7c948; border-radius: 24px; padding: 1.8rem 1.5rem 2rem; }
+  .card-header { text-align: center; margin-bottom: 1.4rem; }
+  .header-emoji { font-size: 2.5rem; }
+  .card-title { font-size: 1.3rem; font-weight: 800; color: #e07b00; line-height: 1.5; margin: 0.3rem 0 0.15rem; }
+  .card-date-loc { font-size: 0.9rem; color: #c08030; font-weight: 600; }
+  .divider { border: none; border-top: 2px dashed #f7c94880; margin: 1rem 0; }
+  .section-label { font-size: 0.8rem; font-weight: 700; color: #e07b00; letter-spacing: 0.04em; margin-bottom: 0.6rem; text-transform: uppercase; }
+  .timeline { display: flex; flex-direction: column; }
+  .tl-item { display: flex; gap: 0; position: relative; }
+  .tl-left { display: flex; flex-direction: column; align-items: center; width: 52px; flex-shrink: 0; }
+  .tl-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; z-index: 1; }
+  .dot-yellow { background: #fde68a; } .dot-pink { background: #fce7f3; } .dot-mint { background: #d1fae5; }
+  .tl-line { width: 2px; flex: 1; background: #f7c94860; min-height: 16px; }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-right { padding: 0 0 1.2rem 0.6rem; flex: 1; }
+  .tl-time { font-size: 0.78rem; font-weight: 700; color: #d97706; margin-bottom: 2px; }
+  .tl-event { font-size: 0.97rem; font-weight: 700; color: #3d2b00; margin-bottom: 2px; }
+  .tl-place { font-size: 0.82rem; color: #a06030; }
+  .tl-snack { font-size: 0.8rem; color: #c05010; font-weight: 600; margin-top: 3px; }
+  .info-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
+  .chip { background: #fff3cd; border: 1.5px solid #f7c948; border-radius: 50px; padding: 5px 14px; font-size: 0.82rem; font-weight: 600; color: #7a4a00; display: flex; align-items: center; gap: 5px; }
+  .footer-msg { text-align: center; margin-top: 1.2rem; font-size: 0.9rem; color: #c08030; font-weight: 600; }
+  .footer-emoji { font-size: 1.5rem; display: block; margin-bottom: 2px; }
+  .back-btn { display: block; margin: 1rem auto 0; background: none; border: 1.5px solid #f7c948; border-radius: 50px; padding: 6px 20px; font-size: 0.82rem; color: #c08030; cursor: pointer; font-weight: 600; }
+  .back-btn:hover { background: #fff3cd; }
+</style>
+
+<canvas id="confettiCanvas"></canvas>
+
+<!-- ENVELOPE -->
+<div class="envelope-wrap" id="envelopeWrap">
+  <div class="envelope" onclick="openCard()">
+    <div class="balloons">🎈🎂🎈</div>
+    <div class="env-title">이준이의 생일파티에<br>초대합니다 🎉</div>
+    <div class="env-sub">눌러서 초대장 열기</div>
+    <div class="tap-btn">✨ 열어보세요 ✨</div>
+    <div class="confetti-row">🎁 🌟 🎊 🌈 🎁</div>
+  </div>
+</div>
+
+<!-- CARD -->
+<div class="card-wrap" id="cardWrap">
+  <div class="music-bar" id="musicBtn" onclick="toggleMusic()">
+    <span class="note-anim">🎵</span>
+    <span id="musicLabel">생일 축하 노래 재생 중 🎶</span>
+    <span id="musicIcon">⏸</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="header-emoji">🎂🎉🎈</div>
+      <div class="card-title">이준이의 생일파티에<br>초대합니다!</div>
+      <div class="card-date-loc">📅 2026년 5월 30일 &nbsp;|&nbsp; 📍 원통</div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">🕐 당일 일정</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-dot dot-yellow">🎲</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-right">
+          <div class="tl-time">오전 10:00 – 12:00</div>
+          <div class="tl-event">보드게임 타임 🎮</div>
+          <div class="tl-place">청년커뮤니티센터 &nbsp;(인솔: 이준 아빠)</div>
+          <div class="tl-snack">🍔 간식: 수제 햄버거</div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-dot dot-pink">🍽️</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-right">
+          <div class="tl-time">12:00 – 13:00</div>
+          <div class="tl-event">점심 식사 🍜</div>
+          <div class="tl-place">원통으로 이동 후 함께 식사</div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-dot dot-mint">🌈</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-right">
+          <div class="tl-time">13:00 – 14:00</div>
+          <div class="tl-event">원통 탐험 코스 🏃</div>
+          <div class="tl-place">무인 아이스크림 가게 🍦 · 인생네컷 📸</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="info-chips">
+      <div class="chip">📅 5월 30일</div>
+      <div class="chip">📍 원통 일대</div>
+      <div class="chip">⏰ 오전 10시 집합</div>
+    </div>
+
+    <div class="footer-msg">
+      <span class="footer-emoji">💛</span>
+      이준이와 함께하는 특별한 하루,<br>꼭 함께해 주세요!
+    </div>
+
+    <button class="back-btn" onclick="closeCard()">← 초대장 닫기</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+let pieces = [], animId, musicPlaying = false, audioCtx = null;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function launchConfetti() {
+  resizeCanvas();
+  canvas.style.display = 'block';
+  pieces = [];
+  const colors = ['#f7c948','#ff6b9d','#7dd3fc','#86efac','#fda4af','#c4b5fd','#fdba74'];
+  for (let i = 0; i < 160; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 200,
+      w: 8 + Math.random() * 8,
+      h: 5 + Math.random() * 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      vr: (Math.random() - 0.5) * 8,
+      alpha: 1
+    });
+  }
+  animId && cancelAnimationFrame(animId);
+  drawConfetti();
+  setTimeout(() => { cancelAnimationFrame(animId); canvas.style.display = 'none'; }, 4000);
+}
+
+function drawConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let alive = false;
+  pieces.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    if (p.y < canvas.height + 20) { alive = true; p.alpha = Math.max(0, 1 - (p.y / canvas.height) * 0.8); }
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot * Math.PI / 180);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    ctx.restore();
+  });
+  if (alive) animId = requestAnimationFrame(drawConfetti);
+  else canvas.style.display = 'none';
+}
+
+function playBirthdaySong() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const notes = [
+    [261.63,0.3],[261.63,0.15],[293.66,0.45],[261.63,0.45],[349.23,0.45],[329.63,0.9],
+    [261.63,0.3],[261.63,0.15],[293.66,0.45],[261.63,0.45],[392.00,0.45],[349.23,0.9],
+    [261.63,0.3],[261.63,0.15],[523.25,0.45],[440.00,0.45],[349.23,0.45],[329.63,0.45],[293.66,0.45],
+    [466.16,0.3],[466.16,0.15],[440.00,0.45],[349.23,0.45],[392.00,0.45],[349.23,0.9]
+  ];
+  let t = audioCtx.currentTime + 0.05;
+  notes.forEach(([freq, dur]) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.9);
+    osc.start(t); osc.stop(t + dur);
+    t += dur;
+  });
+  musicPlaying = true;
+  document.getElementById('musicLabel').textContent = '생일 축하 노래 재생 중 🎶';
+  document.getElementById('musicIcon').textContent = '⏸';
+  setTimeout(() => {
+    musicPlaying = false;
+    document.getElementById('musicLabel').textContent = '다시 듣기';
+    document.getElementById('musicIcon').textContent = '▶';
+  }, t * 1000 - audioCtx.currentTime * 1000 + 200);
+}
+
+function toggleMusic() {
+  if (!musicPlaying) playBirthdaySong();
+}
+
+function openCard() {
+  document.getElementById('envelopeWrap').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  launchConfetti();
+  setTimeout(() => playBirthdaySong(), 400);
+}
+
+function closeCard() {
+  document.getElementById('cardWrap').style.display = 'none';
+  document.getElementById('envelopeWrap').style.display = 'flex';
+  musicPlaying = false;
+}
+</script>
